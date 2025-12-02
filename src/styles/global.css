@@ -1,0 +1,273 @@
+/*
+ * A timeless, scholarly aesthetic with subtle personality
+ * Using system fonts with Georgia as the primary reading font
+ */
+
+:root {
+  --color-bg: #fdfcfa;
+  --color-text: #2c2c2c;
+  --color-text-muted: #666;
+  --color-accent: #8b4513;
+  --color-border: #e0dcd4;
+  --font-body: Georgia, 'Times New Roman', serif;
+  --font-mono: 'SF Mono', Menlo, Monaco, monospace;
+  --max-width: 38rem;
+  --spacing: 1.5rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.7;
+  padding: var(--spacing);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+/* Header */
+header {
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+header h1 {
+  font-size: 1.25rem;
+  font-weight: normal;
+  letter-spacing: 0.02em;
+}
+
+header h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+header nav {
+  margin-top: 0.75rem;
+}
+
+header nav a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  margin-right: 1.25rem;
+  font-size: 0.9rem;
+}
+
+header nav a:hover {
+  color: var(--color-accent);
+}
+
+/* Typography */
+h1, h2, h3 {
+  font-weight: normal;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; margin-top: 2rem; }
+h3 { font-size: 1.1rem; font-style: italic; }
+
+p {
+  margin-bottom: 1.25rem;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration-style: dotted;
+}
+
+blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1.25rem;
+  border-left: 2px solid var(--color-border);
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: #f5f3ef;
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+
+pre {
+  background: #f5f3ef;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 3px;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2rem 0;
+}
+
+/* Post list */
+.post-list {
+  list-style: none;
+}
+
+.post-list li {
+  margin-bottom: 1.5rem;
+}
+
+.post-list a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.post-list a:hover {
+  color: var(--color-accent);
+}
+
+.post-meta {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.post-meta a {
+  color: var(--color-text-muted);
+}
+
+.post-meta a:hover {
+  color: var(--color-accent);
+}
+
+.post-subtitle {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.post-type {
+  font-style: italic;
+}
+
+.tag-link {
+  text-decoration: none;
+}
+
+/* Single post */
+article header {
+  border-bottom: none;
+  margin-bottom: 2rem;
+  padding-bottom: 0;
+}
+
+article header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+article header .subtitle {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+article .cover-image {
+  margin-bottom: 1.5rem;
+}
+
+article .cover-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+
+article .content {
+  margin-bottom: 3rem;
+}
+
+/* Tags */
+.post-tags {
+  margin-top: 0.75rem;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  background: #f5f3ef;
+  padding: 0.2em 0.6em;
+  border-radius: 3px;
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+  text-decoration: none;
+}
+
+.tag:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Tag/Type listing pages */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.page-header p {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Footer */
+footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Little quirk: a subtle ornament */
+.ornament {
+  text-align: center;
+  color: var(--color-border);
+  margin: 2rem 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.5em;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  html { font-size: 16px; }
+  .container { padding: 1rem 0; }
+}

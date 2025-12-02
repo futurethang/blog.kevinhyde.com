@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+const siteTitle = 'K. Hyde';
+const pageTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content="Notes on reading, listening, and thinking." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◉</text></svg>" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><a href="/">K. Hyde</a></h1>
+        <nav>
+          <a href="/">Notes</a>
+          <a href="/about">About</a>
+        </nav>
+      </header>
+
+      <main>
+        <slot />
+      </main>
+
+      <footer>
+        <p>A quiet corner for reading, listening, and thinking.</p>
+      </footer>
+    </div>
+  </body>
+</html>

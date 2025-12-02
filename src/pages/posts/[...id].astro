@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  return posts.map((post) => ({
+    params: { id: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+---
+
+<Base title={post.data.title}>
+  <article>
+    <header>
+      {post.data.coverImage && (
+        <div class="cover-image">
+          <Image src={post.data.coverImage} alt="" />
+        </div>
+      )}
+      <h1>{post.data.title}</h1>
+      {post.data.subtitle && <p class="subtitle">{post.data.subtitle}</p>}
+      <div class="post-meta">
+        {formatDate(post.data.date)}
+        {post.data.type && <span class="post-type"> · <a href={`/type/${post.data.type}`}>{post.data.type}</a></span>}
+      </div>
+      {post.data.tags && post.data.tags.length > 0 && (
+        <div class="post-tags">
+          {post.data.tags.map((tag) => (
+            <a href={`/tag/${tag}`} class="tag">{tag}</a>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="content">
+      <Content />
+    </div>
+
+    <div class="ornament">· · ·</div>
+
+    <p><a href="/">← Back to all notes</a></p>
+  </article>
+</Base>

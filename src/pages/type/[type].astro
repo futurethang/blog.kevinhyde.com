@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const types = [...new Set(posts.map((post) => post.data.type).filter(Boolean))] as string[];
+
+  return types.map((type) => ({
+    params: { type },
+    props: {
+      type,
+      posts: posts
+        .filter((post) => post.data.type === type)
+        .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
+    },
+  }));
+}
+
+const { type, posts } = Astro.props;
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+---
+
+<Base title={type.charAt(0).toUpperCase() + type.slice(1)}>
+  <div class="page-header">
+    <h1>{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
+    <p>{posts.length} {posts.length === 1 ? 'note' : 'notes'}</p>
+  </div>
+
+  <ul class="post-list">
+    {posts.map((post) => (
+      <li>
+        <a href={`/posts/${post.id}`}>{post.data.title}</a>
+        <div class="post-meta">
+          {formatDate(post.data.date)}
+          {post.data.tags && post.data.tags.length > 0 && (
+            <span>
+              {' · '}
+              {post.data.tags.map((tag, i) => (
+                <><a href={`/tag/${tag}`} class="tag-link">{tag}</a>{i < post.data.tags!.length - 1 && ', '}</>
+              ))}
+            </span>
+          )}
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  <div class="ornament">· · ·</div>
+
+  <p><a href="/">← Back to all notes</a></p>
+</Base>
