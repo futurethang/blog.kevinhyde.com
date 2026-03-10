@@ -1,10 +1,25 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
 
-const posts = (await getCollection('posts')).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+const posts = await getCollection('posts');
+const micros = await getCollection('micro');
+
+type FeedItem =
+  | { kind: 'post'; date: Date; data: typeof posts[number] }
+  | { kind: 'micro'; date: Date; data: typeof micros[number]; Content: any };
+
+const renderedMicros = await Promise.all(
+  micros.map(async (micro) => {
+    const { Content } = await render(micro);
+    return { micro, Content };
+  })
 );
+
+const feed: FeedItem[] = [
+  ...posts.map((post) => ({ kind: 'post' as const, date: post.data.date, data: post })),
+  ...renderedMicros.map(({ micro, Content }) => ({ kind: 'micro' as const, date: micro.data.date, data: micro, Content })),
+].sort((a, b) => b.date.valueOf() - a.date.valueOf());
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
@@ -13,31 +28,85 @@ function formatDate(date: Date): string {
     day: 'numeric'
   });
 }
+
+function formatMicroDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+const archetypeColors: Record<string, string> = {
+  'Product Mind': '#6366f1',
+  'Systems Architect': '#0891b2',
+  'AI Process Engineer': '#9333ea',
+  'Domain Expert': '#c2410c',
+  'Quality & Trust': '#16a34a',
+};
 ---
 
 <Base>
-  <ul class="post-list">
-    {posts.map((post) => (
-      <li>
-        <a href={`/posts/${post.id}`}>{post.data.title}</a>
-        {post.data.subtitle && <span class="post-subtitle"> — {post.data.subtitle}</span>}
-        <div class="post-meta">
-          {formatDate(post.data.date)}
-          {post.data.type && <span class="post-type"> · <a href={`/type/${post.data.type}`}>{post.data.type}</a></span>}
-          {post.data.tags && post.data.tags.length > 0 && (
-            <span class="post-tags-inline">
-              {' · '}
-              {post.data.tags.map((tag, i) => (
-                <><a href={`/tag/${tag}`} class="tag-link">{tag}</a>{i < post.data.tags!.length - 1 && ', '}</>
-              ))}
-            </span>
-          )}
-        </div>
-      </li>
-    ))}
-  </ul>
+  <div class="feed">
+    {feed.map((item) => {
+      if (item.kind === 'post') {
+        const post = item.data;
+        return (
+          <div class="feed-item">
+            <div class="post-list-item">
+              <a href={`/posts/${post.id}`}>{post.data.title}</a>
+              {post.data.subtitle && <span class="post-subtitle"> — {post.data.subtitle}</span>}
+              <div class="post-meta">
+                {formatDate(post.data.date)}
+                {post.data.type && <span class="post-type"> · <a href={`/type/${post.data.type}`}>{post.data.type}</a></span>}
+                {post.data.tags && post.data.tags.length > 0 && (
+                  <span class="post-tags-inline">
+                    {' · '}
+                    {post.data.tags.map((tag, i) => (
+                      <><a href={`/tag/${tag}`} class="tag-link">{tag}</a>{i < post.data.tags!.length - 1 && ', '}</>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      } else {
+        const micro = item.data;
+        const Content = item.Content;
+        return (
+          <div class="feed-item">
+            <div class="micro-entry micro-entry--inline">
+              <div class="micro-meta">
+                <time datetime={micro.data.date.toISOString()}>
+                  {formatMicroDate(micro.data.date)}
+                </time>
+                {micro.data.archetype && (
+                  <span class="archetype-badge" style={`--archetype-color: ${archetypeColors[micro.data.archetype] || '#666'}`}>
+                    {micro.data.archetype}
+                  </span>
+                )}
+              </div>
+              <div class="micro-content">
+                <Content />
+              </div>
+              {micro.data.tags && micro.data.tags.length > 0 && (
+                <div class="micro-tags">
+                  {micro.data.tags.map((tag) => (
+                    <a href={`/signals/tag/${tag}`} class="tag">{tag}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+    })}
+  </div>
 
-  {posts.length === 0 && (
+  {feed.length === 0 && (
     <p>Nothing here yet. Check back soon.</p>
   )}
 </Base>
