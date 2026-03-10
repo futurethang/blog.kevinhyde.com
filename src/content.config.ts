@@ -14,4 +14,19 @@ const posts = defineCollection({
   }),
 });
 
-export const collections = { posts };
+const micro = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/micro' }),
+  schema: z.object({
+    date: z.coerce.date(),
+    tags: z.array(z.string()).optional(),
+    archetype: z.enum([
+      'Product Mind',
+      'Systems Architect',
+      'AI Process Engineer',
+      'Domain Expert',
+      'Quality & Trust',
+    ]).optional(),
+  }),
+});
+
+export const collections = { posts, micro };

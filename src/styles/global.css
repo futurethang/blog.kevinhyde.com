@@ -266,8 +266,139 @@ footer {
   letter-spacing: 0.5em;
 }
 
+/* Micro posts / Signals */
+.micro-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.micro-entry {
+  padding: 1.25rem 0 1.25rem 1.25rem;
+  border-left: 3px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.micro-entry:last-child {
+  border-bottom: none;
+}
+
+.micro-entry--inline {
+  margin-bottom: 0;
+}
+
+.micro-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.micro-content {
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.micro-content p {
+  margin-bottom: 0.5rem;
+}
+
+.micro-content p:last-child {
+  margin-bottom: 0;
+}
+
+.micro-tags {
+  margin-top: 0.5rem;
+}
+
+.micro-tag-filter {
+  margin-bottom: 1.5rem;
+}
+
+.archetype-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--archetype-color, #666);
+  border: 1px solid var(--archetype-color, #666);
+  padding: 0.1em 0.5em;
+  border-radius: 9999px;
+  line-height: 1.4;
+}
+
+/* Signals preview carousel */
+.signals-preview {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.signals-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+}
+
+.signals-preview-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.signals-preview-link {
+  font-size: 0.8rem;
+}
+
+.signals-carousel {
+  display: grid;
+  padding-left: 1.25rem;
+  border-left: 3px solid var(--color-border);
+}
+
+.signals-slide {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.signals-slide--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.signals-dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.signals-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--color-text-muted);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.signals-dot--active {
+  background: var(--color-text-muted);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   html { font-size: 16px; }
   .container { padding: 1rem 0; }
+  .micro-entry { padding-left: 0.75rem; }
+  .signals-carousel { padding-left: 0.75rem; }
+  .signals-dots { padding-left: 0.75rem; }
 }
