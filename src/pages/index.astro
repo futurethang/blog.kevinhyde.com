@@ -5,21 +5,18 @@ import Base from '../layouts/Base.astro';
 const posts = await getCollection('posts');
 const micros = await getCollection('micro');
 
-type FeedItem =
-  | { kind: 'post'; date: Date; data: typeof posts[number] }
-  | { kind: 'micro'; date: Date; data: typeof micros[number]; Content: any };
+const latestMicros = micros
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 5);
 
 const renderedMicros = await Promise.all(
-  micros.map(async (micro) => {
+  latestMicros.map(async (micro) => {
     const { Content } = await render(micro);
     return { micro, Content };
   })
 );
 
-const feed: FeedItem[] = [
-  ...posts.map((post) => ({ kind: 'post' as const, date: post.data.date, data: post })),
-  ...renderedMicros.map(({ micro, Content }) => ({ kind: 'micro' as const, date: micro.data.date, data: micro, Content })),
-].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
@@ -49,64 +46,108 @@ const archetypeColors: Record<string, string> = {
 ---
 
 <Base>
-  <div class="feed">
-    {feed.map((item) => {
-      if (item.kind === 'post') {
-        const post = item.data;
-        return (
-          <div class="feed-item">
-            <div class="post-list-item">
-              <a href={`/posts/${post.id}`}>{post.data.title}</a>
-              {post.data.subtitle && <span class="post-subtitle"> — {post.data.subtitle}</span>}
-              <div class="post-meta">
-                {formatDate(post.data.date)}
-                {post.data.type && <span class="post-type"> · <a href={`/type/${post.data.type}`}>{post.data.type}</a></span>}
-                {post.data.tags && post.data.tags.length > 0 && (
-                  <span class="post-tags-inline">
-                    {' · '}
-                    {post.data.tags.map((tag, i) => (
-                      <><a href={`/tag/${tag}`} class="tag-link">{tag}</a>{i < post.data.tags!.length - 1 && ', '}</>
-                    ))}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      } else {
-        const micro = item.data;
-        const Content = item.Content;
-        return (
-          <div class="feed-item">
-            <div class="micro-entry micro-entry--inline">
-              <div class="micro-meta">
-                <time datetime={micro.data.date.toISOString()}>
-                  {formatMicroDate(micro.data.date)}
-                </time>
-                {micro.data.archetype && (
-                  <span class="archetype-badge" style={`--archetype-color: ${archetypeColors[micro.data.archetype] || '#666'}`}>
-                    {micro.data.archetype}
-                  </span>
-                )}
-              </div>
-              <div class="micro-content">
-                <Content />
-              </div>
-              {micro.data.tags && micro.data.tags.length > 0 && (
-                <div class="micro-tags">
-                  {micro.data.tags.map((tag) => (
-                    <a href={`/signals/tag/${tag}`} class="tag">{tag}</a>
-                  ))}
-                </div>
+  {renderedMicros.length > 0 && (
+    <div class="signals-preview">
+      <div class="signals-preview-header">
+        <span class="signals-preview-label">Latest signals</span>
+        <a href="/signals" class="signals-preview-link">View all →</a>
+      </div>
+      <div class="signals-carousel" aria-live="polite">
+        {renderedMicros.map(({ micro, Content }, i) => (
+          <div class={`signals-slide ${i === 0 ? 'signals-slide--active' : ''}`} data-slide={i}>
+            <div class="micro-meta">
+              <time datetime={micro.data.date.toISOString()}>
+                {formatMicroDate(micro.data.date)}
+              </time>
+              {micro.data.archetype && (
+                <span class="archetype-badge" style={`--archetype-color: ${archetypeColors[micro.data.archetype] || '#666'}`}>
+                  {micro.data.archetype}
+                </span>
               )}
             </div>
+            <div class="micro-content">
+              <Content />
+            </div>
+            {micro.data.tags && micro.data.tags.length > 0 && (
+              <div class="micro-tags">
+                {micro.data.tags.map((tag) => (
+                  <a href={`/signals/tag/${tag}`} class="tag">{tag}</a>
+                ))}
+              </div>
+            )}
           </div>
-        );
-      }
-    })}
-  </div>
+        ))}
+      </div>
+      <div class="signals-dots">
+        {renderedMicros.map((_, i) => (
+          <button class={`signals-dot ${i === 0 ? 'signals-dot--active' : ''}`} data-dot={i} aria-label={`Show signal ${i + 1}`} />
+        ))}
+      </div>
+    </div>
+  )}
 
-  {feed.length === 0 && (
+  <ul class="post-list">
+    {sortedPosts.map((post) => (
+      <li>
+        <a href={`/posts/${post.id}`}>{post.data.title}</a>
+        {post.data.subtitle && <span class="post-subtitle"> — {post.data.subtitle}</span>}
+        <div class="post-meta">
+          {formatDate(post.data.date)}
+          {post.data.type && <span class="post-type"> · <a href={`/type/${post.data.type}`}>{post.data.type}</a></span>}
+          {post.data.tags && post.data.tags.length > 0 && (
+            <span class="post-tags-inline">
+              {' · '}
+              {post.data.tags.map((tag, i) => (
+                <><a href={`/tag/${tag}`} class="tag-link">{tag}</a>{i < post.data.tags!.length - 1 && ', '}</>
+              ))}
+            </span>
+          )}
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  {sortedPosts.length === 0 && (
     <p>Nothing here yet. Check back soon.</p>
   )}
 </Base>
+
+<script>
+  const carousel = document.querySelector('.signals-carousel');
+  if (carousel) {
+    const slides = carousel.querySelectorAll('.signals-slide');
+    const dots = document.querySelectorAll('.signals-dot');
+    let current = 0;
+    let timer: ReturnType<typeof setInterval>;
+
+    function showSlide(index: number) {
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('signals-slide--active', i === index);
+      });
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('signals-dot--active', i === index);
+      });
+      current = index;
+    }
+
+    function nextSlide() {
+      showSlide((current + 1) % slides.length);
+    }
+
+    function startTimer() {
+      timer = setInterval(nextSlide, 5000);
+    }
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        clearInterval(timer);
+        showSlide(Number((dot as HTMLElement).dataset.dot));
+        startTimer();
+      });
+    });
+
+    if (slides.length > 1) {
+      startTimer();
+    }
+  }
+</script>
