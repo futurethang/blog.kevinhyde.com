@@ -1,0 +1,40 @@
+name: New Signal
+description: Post a micro blog entry (signal) from any device.
+title: "[Signal]"
+labels: ["signal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write your signal below — a quick thought, observation, or note (1-5 sentences). Claude will lightly polish the text before publishing.
+  - type: textarea
+    id: content
+    attributes:
+      label: Signal content
+      description: The body of your micro post.
+      placeholder: "What's on your mind?"
+    validations:
+      required: true
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated tags.
+      placeholder: "ai-process-engineering, orchestration, claude-code"
+    validations:
+      required: false
+  - type: dropdown
+    id: archetype
+    attributes:
+      label: Archetype
+      description: Optional perspective label.
+      options:
+        - "(none)"
+        - "Product Mind"
+        - "Systems Architect"
+        - "AI Process Engineer"
+        - "Domain Expert"
+        - "Quality & Trust"
+      default: 0
+    validations:
+      required: false

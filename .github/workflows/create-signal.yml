@@ -1,0 +1,132 @@
+name: Create Signal Post
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-signal:
+    if: contains(github.event.issue.labels.*.name, 'signal')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse issue form fields
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body;
+
+            function getField(body, label) {
+              const pattern = new RegExp(`### ${label}\\s*\\n\\s*([\\s\\S]*?)(?=\\n###|$)`);
+              const match = body.match(pattern);
+              return match ? match[1].trim() : '';
+            }
+
+            const content = getField(body, 'Signal content');
+            const tags = getField(body, 'Tags');
+            const archetype = getField(body, 'Archetype');
+
+            core.setOutput('content', content);
+            core.setOutput('tags', tags);
+            core.setOutput('archetype', archetype === '(none)' ? '' : archetype);
+
+      - name: Polish with Claude
+        id: claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RAW_CONTENT: ${{ steps.parse.outputs.content }}
+          RAW_TAGS: ${{ steps.parse.outputs.tags }}
+        run: |
+          # Build the prompt
+          PROMPT="You are a light copy editor for a developer's micro blog. Your job is to lightly polish the following short note — fix typos, tighten phrasing, but preserve the author's voice and keep it casual/authentic. Do NOT add a title. Do NOT expand significantly. Return ONLY the polished text, nothing else.
+
+          Original:
+          ${RAW_CONTENT}"
+
+          # Escape for JSON
+          PROMPT_JSON=$(echo "$PROMPT" | jq -Rs .)
+
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "{
+              \"model\": \"claude-haiku-4-5-20251001\",
+              \"max_tokens\": 512,
+              \"messages\": [{\"role\": \"user\", \"content\": $PROMPT_JSON}]
+            }")
+
+          # Extract the text content
+          POLISHED=$(echo "$RESPONSE" | jq -r '.content[0].text // empty')
+
+          if [ -z "$POLISHED" ]; then
+            echo "Claude API call failed or returned empty, using original content"
+            POLISHED="$RAW_CONTENT"
+          fi
+
+          # Write to file so we don't lose newlines
+          echo "$POLISHED" > /tmp/polished_content.txt
+
+      - name: Create micro post file
+        env:
+          TAGS: ${{ steps.parse.outputs.tags }}
+          ARCHETYPE: ${{ steps.parse.outputs.archetype }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          FILENAME=$(date -u +"%Y-%m-%d-%H%M%S")-micro.md
+          FILEPATH="src/content/micro/${FILENAME}"
+
+          CONTENT=$(cat /tmp/polished_content.txt)
+
+          # Build frontmatter
+          {
+            echo "---"
+            echo "date: ${TIMESTAMP}"
+
+            if [ -n "$TAGS" ]; then
+              echo "tags: [$(echo "$TAGS" | sed 's/,\s*/, /g')]"
+            fi
+
+            if [ -n "$ARCHETYPE" ]; then
+              echo "archetype: \"${ARCHETYPE}\""
+            fi
+
+            echo "---"
+            echo ""
+            echo "$CONTENT"
+          } > "$FILEPATH"
+
+          echo "Created ${FILEPATH}"
+          echo "filepath=${FILEPATH}" >> "$GITHUB_OUTPUT"
+          echo "filename=${FILENAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/micro/
+          git commit -m "Add signal: $(date -u +%Y-%m-%d-%H%M%S)"
+          git push
+
+      - name: Close issue with confirmation
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Signal published! It will appear on the site after the next build.\n\n[View signals →](https://blog.kevinhyde.com/signals)`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
