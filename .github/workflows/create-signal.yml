@@ -2,11 +2,13 @@ name: Create Signal Post
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   create-signal:
-    if: contains(github.event.issue.labels.*.name, 'signal')
+    if: >-
+      contains(github.event.issue.labels.*.name, 'signal') ||
+      (github.event.action == 'opened' && contains(github.event.issue.body, '### Signal content'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -14,6 +16,29 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Ensure signal label exists and is applied
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            // Create label if it doesn't exist
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: 'signal' });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner, repo, name: 'signal',
+                color: '9333ea', description: 'Micro blog signal post'
+              });
+            }
+            // Apply label to issue if missing
+            const labels = context.payload.issue.labels.map(l => l.name);
+            if (!labels.includes('signal')) {
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: context.issue.number, labels: ['signal']
+              });
+            }
 
       - name: Parse issue form fields
         id: parse
@@ -29,12 +54,17 @@ jobs:
             }
 
             const content = getField(body, 'Signal content');
-            const tags = getField(body, 'Tags');
-            const archetype = getField(body, 'Archetype');
+            let tags = getField(body, 'Tags');
+            let archetype = getField(body, 'Archetype');
+
+            // GitHub forms use "_No response_" for empty optional fields
+            if (tags === '_No response_' || tags === 'No response') tags = '';
+            if (archetype === '_No response_' || archetype === 'No response') archetype = '';
+            if (archetype === '(none)') archetype = '';
 
             core.setOutput('content', content);
             core.setOutput('tags', tags);
-            core.setOutput('archetype', archetype === '(none)' ? '' : archetype);
+            core.setOutput('archetype', archetype);
 
       - name: Polish with Claude
         id: claude
