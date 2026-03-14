@@ -7,6 +7,7 @@ on:
 jobs:
   create-signal:
     if: >-
+      contains(github.event.issue.labels.*.name, 'Signal') ||
       contains(github.event.issue.labels.*.name, 'signal') ||
       (github.event.action == 'opened' && contains(github.event.issue.body, '### Signal content'))
     runs-on: ubuntu-latest
@@ -25,18 +26,18 @@ jobs:
             const repo = context.repo.repo;
             // Create label if it doesn't exist
             try {
-              await github.rest.issues.getLabel({ owner, repo, name: 'signal' });
+              await github.rest.issues.getLabel({ owner, repo, name: 'Signal' });
             } catch {
               await github.rest.issues.createLabel({
-                owner, repo, name: 'signal',
+                owner, repo, name: 'Signal',
                 color: '9333ea', description: 'Micro blog signal post'
               });
             }
             // Apply label to issue if missing
             const labels = context.payload.issue.labels.map(l => l.name);
-            if (!labels.includes('signal')) {
+            if (!labels.includes('Signal')) {
               await github.rest.issues.addLabels({
-                owner, repo, issue_number: context.issue.number, labels: ['signal']
+                owner, repo, issue_number: context.issue.number, labels: ['Signal']
               });
             }
 

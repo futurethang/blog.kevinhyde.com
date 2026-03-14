@@ -1,7 +1,7 @@
 name: New Signal
 description: Post a micro blog entry (signal) from any device.
 title: "[Signal]"
-labels: ["signal"]
+labels: ["Signal"]
 body:
   - type: markdown
     attributes:
