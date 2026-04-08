@@ -2,7 +2,7 @@
 title: The Skill Flywheel
 subtitle: A Tiny Claude Hook That Pays You Back Over Time
 date: 2026-04-08
-type: AI
+type: thinking
 tags:
   - AI
   - Claude Code
